@@ -220,7 +220,7 @@ def parse_gs1(code):
         code {str} -- barcode
 
     Returns:
-        str[] -- barcode elements, (01) EAN, (10) LOT, 
+        str[] -- barcode elements, (01) EAN, (10) LOT,
         (17) expiration date, (21) catalog number
     """
 
