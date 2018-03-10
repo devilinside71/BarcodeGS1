@@ -47,6 +47,7 @@ def parse_arguments():
     parser.add_argument('-ex', '--expiration', help='expiration date YYMMDD')
     parser.add_argument('-f', '--function', help='function to execute',
                         type=str, choices=['check_gtin_id',
+                                           'format_barcode'
                                            'verify',
                                            'get_ean_number',
                                            'get_lot_number',
@@ -129,6 +130,12 @@ def execute_program():
                              args.expiration, args.catalognumber, True))
         if args.verbose:
             print("GS1 barcode: " + res)
+        else:
+            print(res)
+    if args.function == 'format_barcode':
+        res = str(format_barcode(args.barcode))
+        if args.verbose:
+            print("GS1 formatted barcode: " + res)
         else:
             print(res)
 
@@ -283,6 +290,15 @@ def parse_gs1(code):
 
 
 def format_barcode(code):
+    """Format barcode.
+
+    Arguments:
+        code {str} -- barcode
+
+    Returns:
+        str -- formatted barcode
+    """
+
     ret = code.replace("(", "")
     ret = ret.replace(")", "")
     return ret
