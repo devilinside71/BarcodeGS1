@@ -61,6 +61,9 @@ class testFunctions(unittest.TestCase):
             self.ean, self.lot, self.expiration_date,
             self.catalog_number, True), self.code_brackets)
 
+    def test_format_barcode(self):
+        self.assertEqual(gs1.format_barcode(self.code_brackets), self.code)
+
 
 if __name__ == '__main__':
     unittest.main()

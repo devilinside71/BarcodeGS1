@@ -47,7 +47,6 @@ def parse_arguments():
     parser.add_argument('-ex', '--expiration', help='expiration date YYMMDD')
     parser.add_argument('-f', '--function', help='function to execute',
                         type=str, choices=['check_gtin_id',
-                                           'get_link_char',
                                            'verify',
                                            'get_ean_number',
                                            'get_lot_number',
@@ -281,6 +280,12 @@ def parse_gs1(code):
         m_catalog = search(
             r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$', code).group(4)
         return m_ean, m_lot, m_expiration, m_catalog
+
+
+def format_barcode(code):
+    ret = code.replace("(", "")
+    ret = ret.replace(")", "")
+    return ret
 
 
 if __name__ == '__main__':
