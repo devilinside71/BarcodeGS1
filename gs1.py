@@ -212,7 +212,7 @@ def get_ean_number(code):
         code {str} -- barcode
 
     Returns:
-        [type] -- [description]
+        {str} -- EAN number (01)
     """
 
     ret = None
