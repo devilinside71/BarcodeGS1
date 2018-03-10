@@ -41,6 +41,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--barcode', help='full barcode')
     parser.add_argument('-cn', '--catalognumber', help='catalog number')
+    parser.add_argument('-ea', '--eannumber', help='EAN number')
     parser.add_argument('-ln', '--lotnumber', help='LOT number')
     parser.add_argument('-li', '--lic', help='LIC identifier')
     parser.add_argument('-ex', '--expiration', help='expiration date YYMMDD')
@@ -52,7 +53,9 @@ def parse_arguments():
                                            'get_lot_number',
                                            'get_expiration_date',
                                            'get_catalog_number',
-                                           'parse_gs1'
+                                           'parse_gs1',
+                                           'create_gs1',
+                                           'create_gs1_with_brackets'
                                            ])
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
@@ -115,6 +118,53 @@ def execute_program():
             print("Catalog number: " + res[3])
         else:
             print(res)
+    if args.function == 'create_gs1':
+        res = str(create_gs1(args.eannumber, args.lotnumber,
+                             args.expiration, args.catalognumber, False))
+        if args.verbose:
+            print("GS1 barcode: " + res)
+        else:
+            print(res)
+    if args.function == 'create_gs1_with_brackets':
+        res = str(create_gs1(args.eannumber, args.lotnumber,
+                             args.expiration, args.catalognumber, True))
+        if args.verbose:
+            print("GS1 barcode: " + res)
+        else:
+            print(res)
+
+
+def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
+               with_brackets=False):
+    """Create GS1 code.
+
+    Arguments:
+        ean_number {str} -- EAN number
+        lot_number {str} -- LOT number
+        expiration_date {str} -- expiration date YYMMDD
+        catalog_number {str} -- catalog number
+
+    Keyword Arguments:
+        with_brackets {bool} -- wether output contains brackets
+        for human reading (default: {False})
+
+    Returns:
+        str -- GS1 barcode
+    """
+
+    ret = ""
+    bracket_before = ""
+    bracket_after = ""
+    if with_brackets:
+        bracket_before = "("
+        bracket_after = ")"
+    ret = bracket_before + gtin_id+bracket_after + ean_number + \
+        bracket_before + lot_id + bracket_after + lot_number + \
+        bracket_before + expiration_date_id + bracket_after + \
+        expiration_date + \
+        bracket_before + catalog_number_id + bracket_after + \
+        catalog_number
+    return ret
 
 
 def check_gtin_id(code):

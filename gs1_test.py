@@ -10,6 +10,8 @@ import unittest
 class testFunctions(unittest.TestCase):
     def setUp(self):
         self.code = "01059965271763401020141719073121280122804"
+        self.code_brackets = \
+            "(01)05996527176340(10)2014(17)190731(21)280122804"
         self.wrong_code = "0105996527163401020141719073121280122804"
         self.wrong_code2 = "01059965271763401020141719073121280122804"
         self.lot = "2014"
@@ -48,6 +50,16 @@ class testFunctions(unittest.TestCase):
         self.assertEqual(gs1.parse_gs1(self.code), (
                          self.ean, self.lot, self.expiration_date,
                          self.catalog_number))
+
+    def test_create_gs1(self):
+        self.assertEqual(gs1.create_gs1(
+            self.ean, self.lot, self.expiration_date,
+            self.catalog_number, False), self.code)
+
+    def test_create_gs1_with_brackets(self):
+        self.assertEqual(gs1.create_gs1(
+            self.ean, self.lot, self.expiration_date,
+            self.catalog_number, True), self.code_brackets)
 
 
 if __name__ == '__main__':
