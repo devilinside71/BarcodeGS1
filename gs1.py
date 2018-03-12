@@ -523,7 +523,7 @@ def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
         ret = ret+catalog_number_id + \
             catalog_number[:8]+">6"+catalog_number[8:] + "^FS"
     if output_style == "Character":
-        # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4pÎ
+        # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4`Î
         ret = "ÍÊ!" + gs1_chart_dict_c[ean_number[0:2]] + \
             gs1_chart_dict_c[ean_number[2:4]] + \
             gs1_chart_dict_c[ean_number[4:6]] + \
@@ -559,10 +559,15 @@ def get_check_digit(code):
 
     ret = ""
     ret_val = 0
-    for i in range(1, len(code)):
+    for i in range(1, len(code)+1):
         ret_val = ret_val + i * gs1_chart_dict_rev[code[i-1:i]]
+        # Debug
+    #     print(code[i-1:i] + ": " + str(i) + "> " +
+    #           str(gs1_chart_dict_rev[code[i-1:i]]) + "> " +
+    #           str(i * gs1_chart_dict_rev[code[i-1:i]]))
     # print(ret_val)
-    ret = gs1_chart_dict[(ret_val+1) % 103]
+    # print(ret_val % 103)
+    ret = gs1_chart_dict[ret_val % 103]
     return ret
 
 
