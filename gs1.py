@@ -558,11 +558,12 @@ def get_check_digit(code):
     """
 
     ret = ""
-    ret_val = 0
-    for i in range(1, len(code)+1):
-        ret_val = ret_val + i * gs1_chart_dict_rev[code[i-1:i]]
+    ret_val = gs1_chart_dict_rev[code[0]]
+    # print(ret_val)
+    for i in range(2, len(code)+1):
+        ret_val = ret_val + (i-1) * gs1_chart_dict_rev[code[i-1:i]]
         # Debug
-    #     print(code[i-1:i] + ": " + str(i) + "> " +
+    #     print(code[i-1:i] + ": " + str(i-1) + "> " +
     #           str(gs1_chart_dict_rev[code[i-1:i]]) + "> " +
     #           str(i * gs1_chart_dict_rev[code[i-1:i]]))
     # print(ret_val)
