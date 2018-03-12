@@ -27,8 +27,9 @@ class testFunctions(unittest.TestCase):
         self.catalog_number_id = "21"
         self.code_zpl = \
             "^BCN,,N,N^FD>;>80105996527176340102014>8171907312128012280>64^FS"
-        self.code_zpl2 = \
-            "^BCN,,N,N^FD>;>80105996527176340102014>6AA>5>8171907312128012280>64^FS"
+        self.code_zpl2 = "^BCN,,N,N^FD>;>80105996527176340102014"
+        self.code_zpl2 = self.code_zpl2 + ">6AA>5>8171907312128012280>64^FS"
+        self.code_char = "ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4oÎ"
 
     def test_check_gtin_id(self):
         self.assertEqual(gs1.check_gtin_id(self.code), True)
@@ -75,6 +76,11 @@ class testFunctions(unittest.TestCase):
         self.assertEqual(gs1.create_gs1(
             self.ean, self.lot2, self.expiration_date,
             self.catalog_number, "ZPL"), self.code_zpl2)
+
+    def test_create_gs1_character(self):
+        self.assertEqual(gs1.create_gs1(
+            self.ean, self.lot, self.expiration_date,
+            self.catalog_number, "Character"), self.code_char)
 
     def test_format_barcode(self):
         self.assertEqual(gs1.format_barcode(self.code_brackets), self.code)
