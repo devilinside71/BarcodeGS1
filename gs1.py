@@ -141,7 +141,7 @@ def execute_program():
 
 
 def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
-               with_brackets=False):
+               output_style="Normal"):
     """Create GS1 code.
 
     Arguments:
@@ -151,8 +151,8 @@ def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
         catalog_number {str} -- catalog number
 
     Keyword Arguments:
-        with_brackets {bool} -- wether output contains brackets
-        for human reading (default: {False})
+        output_style {str} -- output style Normal, Brackets,
+        ZPL, Charcter (default: {Normal})
 
     Returns:
         str -- GS1 barcode
@@ -161,15 +161,25 @@ def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
     ret = ""
     bracket_before = ""
     bracket_after = ""
-    if with_brackets:
-        bracket_before = "("
-        bracket_after = ")"
-    ret = bracket_before + gtin_id+bracket_after + ean_number + \
-        bracket_before + lot_id + bracket_after + lot_number + \
-        bracket_before + expiration_date_id + bracket_after + \
-        expiration_date + \
-        bracket_before + catalog_number_id + bracket_after + \
-        catalog_number
+    if output_style == "Normal" or output_style == "Brackets":
+        if output_style == "Brackets":
+            bracket_before = "("
+            bracket_after = ")"
+        ret = bracket_before + gtin_id+bracket_after + ean_number + \
+            bracket_before + lot_id + bracket_after + lot_number + \
+            bracket_before + expiration_date_id + bracket_after + \
+            expiration_date + \
+            bracket_before + catalog_number_id + bracket_after + \
+            catalog_number
+    if output_style == "ZPL":
+        # >;>80105996527176340102014>6AA>5>8171907312128012280>64
+        ret = "^BCN,,N,N^FD>;>8" + gtin_id + ean_number + lot_id
+        if len(lot_number) > 4:
+            ret = ret+lot_number[:4] + ">6"+lot_number[4:] + ">5"
+        else:
+            ret = ret+lot_number
+        ret = ret+">8"+expiration_date_id+expiration_date
+        ret = ret+catalog_number_id+catalog_number[:8]+">6"+catalog_number[8:]+ "^FS"
     return ret
 
 
