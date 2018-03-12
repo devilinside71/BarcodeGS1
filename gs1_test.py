@@ -29,7 +29,7 @@ class testFunctions(unittest.TestCase):
             "^BCN,,N,N^FD>;>80105996527176340102014>8171907312128012280>64^FS"
         self.code_zpl2 = "^BCN,,N,N^FD>;>80105996527176340102014"
         self.code_zpl2 = self.code_zpl2 + ">6AA>5>8171907312128012280>64^FS"
-        self.code_char = "ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4oÎ"
+        self.code_char = "ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4pÎ"
 
     def test_check_gtin_id(self):
         self.assertEqual(gs1.check_gtin_id(self.code), True)

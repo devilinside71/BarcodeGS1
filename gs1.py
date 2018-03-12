@@ -523,7 +523,7 @@ def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
         ret = ret+catalog_number_id + \
             catalog_number[:8]+">6"+catalog_number[8:] + "^FS"
     if output_style == "Character":
-        # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4oÎ
+        # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4pÎ
         ret = "ÍÊ!" + gs1_chart_dict_c[ean_number[0:2]] + \
             gs1_chart_dict_c[ean_number[2:4]] + \
             gs1_chart_dict_c[ean_number[4:6]] + \
