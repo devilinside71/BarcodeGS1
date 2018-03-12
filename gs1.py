@@ -561,8 +561,8 @@ def get_check_digit(code):
     ret_val = 0
     for i in range(1, len(code)):
         ret_val = ret_val + i * gs1_chart_dict_rev[code[i-1:i]]
-    print(ret_val)
-    ret = gs1_chart_dict[ret_val % 103]
+    # print(ret_val)
+    ret = gs1_chart_dict[(ret_val+1) % 103]
     return ret
 
 
