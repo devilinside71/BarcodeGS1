@@ -62,6 +62,8 @@ def parse_arguments():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
     return parser.parse_args()
+# Samlpe commandline:
+# gs1.py -f create_gs1_character -ea 05996527176340 -ln 2014 -ex 190731 -cn 280122804
 
 
 gtin_id = "01"
@@ -559,15 +561,15 @@ def get_check_digit(code):
 
     ret = ""
     ret_val = gs1_chart_dict_rev[code[0]]
-    # print(ret_val)
+    print(ret_val)
     for i in range(2, len(code)+1):
         ret_val = ret_val + (i-1) * gs1_chart_dict_rev[code[i-1:i]]
         # Debug
-    #     print(code[i-1:i] + ": " + str(i-1) + "> " +
-    #           str(gs1_chart_dict_rev[code[i-1:i]]) + "> " +
-    #           str(i * gs1_chart_dict_rev[code[i-1:i]]))
-    # print(ret_val)
-    # print(ret_val % 103)
+        print(code[i-1:i] + ": " + str(i-1) + "> " +
+              str(gs1_chart_dict_rev[code[i-1:i]]) + "> " +
+              str(i * gs1_chart_dict_rev[code[i-1:i]]))
+    print(ret_val)
+    print(ret_val % 103)
     ret = gs1_chart_dict[ret_val % 103]
     return ret
 
