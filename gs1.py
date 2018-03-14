@@ -65,9 +65,6 @@ def parse_arguments():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
     return parser.parse_args()
-# Samlpe commandline:
-# gs1.py -f create_gs1_character -ea 05996527176340
-#           -ln 2014 -ex 190731 -cn 280122804
 
 
 GTIN_ID = "01"
@@ -405,6 +402,38 @@ def execute_program():
     """
 
     args = parse_arguments()
+    if args.function == 'check_gtin_id' or args.function == 'verify':
+        execute_check()
+    else:
+        if args.function[0:4] == "get_":
+            execute_get_element()
+        else:
+            if args.function[0:7] == "create_":
+                execute_creation()
+
+    if args.function == 'parse_gs1':
+        res = parse_gs1(args.barcode)
+        if args.verbose:
+            print("EAN number: " + res[0])
+            print("LOT number: " + res[1])
+            print("Expiration date: " + res[2])
+            print("Catalog number: " + res[3])
+        else:
+            print(res)
+
+    if args.function == 'format_barcode':
+        res = str(format_barcode(args.barcode))
+        if args.verbose:
+            print("GS1 formatted barcode: " + res)
+        else:
+            print(res)
+
+
+def execute_check():
+    """Check functions.
+    """
+
+    args = parse_arguments()
     if args.function == 'check_gtin_id':
         res = str(check_gtin_id(args.barcode))
         if args.verbose:
@@ -417,6 +446,13 @@ def execute_program():
             print("GS1 verification: " + res)
         else:
             print(res)
+
+
+def execute_get_element():
+    """Get elements functions.
+    """
+
+    args = parse_arguments()
     if args.function == 'get_ean_number':
         res = str(get_ean_number(args.barcode))
         if args.verbose:
@@ -441,15 +477,13 @@ def execute_program():
             print("Catalog number: " + res)
         else:
             print(res)
-    if args.function == 'parse_gs1':
-        res = parse_gs1(args.barcode)
-        if args.verbose:
-            print("EAN number: " + res[0])
-            print("LOT number: " + res[1])
-            print("Expiration date: " + res[2])
-            print("Catalog number: " + res[3])
-        else:
-            print(res)
+
+
+def execute_creation():
+    """Barcode craetion functions.
+    """
+
+    args = parse_arguments()
     if args.function == 'create_gs1':
         res = str(create_gs1(args.eannumber, args.lotnumber,
                              args.expiration, args.catalognumber, "Normal"))
@@ -477,12 +511,6 @@ def execute_program():
                              args.expiration, args.catalognumber, "Character"))
         if args.verbose:
             print("GS1 barcode: " + res)
-        else:
-            print(res)
-    if args.function == 'format_barcode':
-        res = str(format_barcode(args.barcode))
-        if args.verbose:
-            print("GS1 formatted barcode: " + res)
         else:
             print(res)
 
@@ -565,15 +593,15 @@ def get_check_digit(code):
 
     ret = ""
     ret_val = GS1_CHART_DIC_REV[code[0]]
-    print(ret_val)
+    # print(ret_val)
     for i in range(2, len(code)+1):
         ret_val = ret_val + (i-1) * GS1_CHART_DIC_REV[code[i-1:i]]
         # Debug
-        print(code[i-1:i] + ": " + str(i-1) + "> " +
-              str(GS1_CHART_DIC_REV[code[i-1:i]]) + "> " +
-              str(i * GS1_CHART_DIC_REV[code[i-1:i]]))
-    print(ret_val)
-    print(ret_val % 103)
+    #     print(code[i-1:i] + ": " + str(i-1) + "> " +
+    #           str(GS1_CHART_DIC_REV[code[i-1:i]]) + "> " +
+    #           str(i * GS1_CHART_DIC_REV[code[i-1:i]]))
+    # print(ret_val)
+    # print(ret_val % 103)
     ret = GS1_CHART_DICT[ret_val % 103]
     return ret
 

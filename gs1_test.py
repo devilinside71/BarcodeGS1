@@ -4,6 +4,7 @@ This module tests for GS1 barcode module.
 """
 
 import unittest
+
 import gs1
 
 
