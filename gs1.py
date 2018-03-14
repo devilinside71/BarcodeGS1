@@ -2,34 +2,38 @@
 """
 This module deals with GS1 barcode.
 """
-# TODO Copyright info, functions, substring, length, unittest
+
 
 import logging
 import sys
 import argparse
-from re import match, search, sub
+from re import match, search
 
-logger = logging.getLogger('program')
+__author__ = "Laszlo Tamas"
+__copyright__ = "Copyright (c) 2048 Laszlo Tamas"
+__licence__ = "MIT"
+__version__ = "1.0"
+
+LOGGER = logging.getLogger('program')
 # set level for file handling (NOTSET>DEBUG>INFO>WARNING>ERROR>CRITICAL)
-logger.setLevel(logging.DEBUG)
+LOGGER.setLevel(logging.DEBUG)
 
 # create file handler which logs even debug messages
-logger_fh = logging.FileHandler('gs1.log')
+LOGGER_FH = logging.FileHandler('gs1.log')
 
 # create console handler with a higher log level
-logger_ch = logging.StreamHandler()
-logger_ch.setLevel(logging.INFO)
+LOGGER_CH = logging.StreamHandler()
+LOGGER_CH.setLevel(logging.INFO)
 
 # create formatter and add it to the handlers
-formatter = \
-    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-                      )
-logger_fh.setFormatter(formatter)
-logger_ch.setFormatter(formatter)
+FORMATTER = \
+    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+LOGGER_FH.setFormatter(FORMATTER)
+LOGGER_CH.setFormatter(FORMATTER)
 
 # add the handlers to the logger
-logger.addHandler(logger_fh)
-logger.addHandler(logger_ch)
+LOGGER.addHandler(LOGGER_FH)
+LOGGER.addHandler(LOGGER_CH)
 
 
 def parse_arguments():
@@ -57,21 +61,21 @@ def parse_arguments():
                                            'create_gs1',
                                            'create_gs1_with_brackets',
                                            'create_gs1_zpl',
-                                           'create_gs1_character',
-                                           ])
+                                           'create_gs1_character'])
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
     return parser.parse_args()
 # Samlpe commandline:
-# gs1.py -f create_gs1_character -ea 05996527176340 -ln 2014 -ex 190731 -cn 280122804
+# gs1.py -f create_gs1_character -ea 05996527176340
+#           -ln 2014 -ex 190731 -cn 280122804
 
 
-gtin_id = "01"
-lot_id = "10"
-expiration_date_id = "17"
-catalog_number_id = "21"
+GTIN_ID = "01"
+LOT_ID = "10"
+EXPIRATION_DATE_ID = "17"
+CATALOG_NUMBER_ID = "21"
 
-gs1_chart_dict = {
+GS1_CHART_DICT = {
     0: "Â",
     1: "!",
     2: "",
@@ -181,7 +185,7 @@ gs1_chart_dict = {
     106: "Î"
 
 }
-gs1_chart_dict_c = {
+GS1_CHART_DICT_C = {
     "00": "Â",
     "01": "!",
     "02": "",
@@ -284,7 +288,7 @@ gs1_chart_dict_c = {
     "99": "Ç"
 
 }
-gs1_chart_dict_rev = {
+GS1_CHART_DIC_REV = {
     "Â": 0,
     "!": 1,
     '"': 2,
@@ -508,42 +512,42 @@ def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
         if output_style == "Brackets":
             bracket_before = "("
             bracket_after = ")"
-        ret = bracket_before + gtin_id+bracket_after + ean_number + \
-            bracket_before + lot_id + bracket_after + lot_number + \
-            bracket_before + expiration_date_id + bracket_after + \
+        ret = bracket_before + GTIN_ID+bracket_after + ean_number + \
+            bracket_before + LOT_ID + bracket_after + lot_number + \
+            bracket_before + EXPIRATION_DATE_ID + bracket_after + \
             expiration_date + \
-            bracket_before + catalog_number_id + bracket_after + \
+            bracket_before + CATALOG_NUMBER_ID + bracket_after + \
             catalog_number
     if output_style == "ZPL":
         # >;>80105996527176340102014>6AA>5>8171907312128012280>64
-        ret = "^BCN,,N,N^FD>;>8" + gtin_id + ean_number + lot_id
+        ret = "^BCN,,N,N^FD>;>8" + GTIN_ID + ean_number + LOT_ID
         if len(lot_number) > 4:
             ret = ret+lot_number[:4] + ">6"+lot_number[4:] + ">5"
         else:
             ret = ret+lot_number
-        ret = ret+">8"+expiration_date_id+expiration_date
-        ret = ret+catalog_number_id + \
+        ret = ret+">8"+EXPIRATION_DATE_ID+expiration_date
+        ret = ret+CATALOG_NUMBER_ID + \
             catalog_number[:8]+">6"+catalog_number[8:] + "^FS"
     if output_style == "Character":
         # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4pÎ
-        ret = "ÍÊ!" + gs1_chart_dict_c[ean_number[0:2]] + \
-            gs1_chart_dict_c[ean_number[2:4]] + \
-            gs1_chart_dict_c[ean_number[4:6]] + \
-            gs1_chart_dict_c[ean_number[6:8]] + \
-            gs1_chart_dict_c[ean_number[8:10]] + \
-            gs1_chart_dict_c[ean_number[10:12]] + \
-            gs1_chart_dict_c[ean_number[12:]]
-        ret = ret + "*" + gs1_chart_dict_c[lot_number[0:2]] + \
-            gs1_chart_dict_c[lot_number[2:4]]
+        ret = "ÍÊ!" + GS1_CHART_DICT_C[ean_number[0:2]] + \
+            GS1_CHART_DICT_C[ean_number[2:4]] + \
+            GS1_CHART_DICT_C[ean_number[4:6]] + \
+            GS1_CHART_DICT_C[ean_number[6:8]] + \
+            GS1_CHART_DICT_C[ean_number[8:10]] + \
+            GS1_CHART_DICT_C[ean_number[10:12]] + \
+            GS1_CHART_DICT_C[ean_number[12:]]
+        ret = ret + "*" + GS1_CHART_DICT_C[lot_number[0:2]] + \
+            GS1_CHART_DICT_C[lot_number[2:4]]
         if len(lot_number) > 4:
             ret = ret + "È" + lot_number[4:] + "Ç"
-        ret = ret + "Ê1" + gs1_chart_dict_c[expiration_date[0:2]] + \
-            gs1_chart_dict_c[expiration_date[2:4]] + \
-            gs1_chart_dict_c[expiration_date[4:6]]
-        ret = ret + "5" + gs1_chart_dict_c[catalog_number[0:2]] + \
-            gs1_chart_dict_c[catalog_number[2:4]] + \
-            gs1_chart_dict_c[catalog_number[4:6]] + \
-            gs1_chart_dict_c[catalog_number[6:8]]
+        ret = ret + "Ê1" + GS1_CHART_DICT_C[expiration_date[0:2]] + \
+            GS1_CHART_DICT_C[expiration_date[2:4]] + \
+            GS1_CHART_DICT_C[expiration_date[4:6]]
+        ret = ret + "5" + GS1_CHART_DICT_C[catalog_number[0:2]] + \
+            GS1_CHART_DICT_C[catalog_number[2:4]] + \
+            GS1_CHART_DICT_C[catalog_number[4:6]] + \
+            GS1_CHART_DICT_C[catalog_number[6:8]]
         ret = ret + "È" + catalog_number[8:]
         ret = ret + get_check_digit(ret) + "Î"
     return ret
@@ -560,17 +564,17 @@ def get_check_digit(code):
     """
 
     ret = ""
-    ret_val = gs1_chart_dict_rev[code[0]]
+    ret_val = GS1_CHART_DIC_REV[code[0]]
     print(ret_val)
     for i in range(2, len(code)+1):
-        ret_val = ret_val + (i-1) * gs1_chart_dict_rev[code[i-1:i]]
+        ret_val = ret_val + (i-1) * GS1_CHART_DIC_REV[code[i-1:i]]
         # Debug
         print(code[i-1:i] + ": " + str(i-1) + "> " +
-              str(gs1_chart_dict_rev[code[i-1:i]]) + "> " +
-              str(i * gs1_chart_dict_rev[code[i-1:i]]))
+              str(GS1_CHART_DIC_REV[code[i-1:i]]) + "> " +
+              str(i * GS1_CHART_DIC_REV[code[i-1:i]]))
     print(ret_val)
     print(ret_val % 103)
-    ret = gs1_chart_dict[ret_val % 103]
+    ret = GS1_CHART_DICT[ret_val % 103]
     return ret
 
 
@@ -585,7 +589,7 @@ def check_gtin_id(code):
     """
 
     ret = False
-    if code[:2] == gtin_id:
+    if code[:2] == GTIN_ID:
         ret = True
     return ret
 
@@ -688,6 +692,7 @@ def parse_gs1(code):
         m_catalog = search(
             r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$', code).group(4)
         return m_ean, m_lot, m_expiration, m_catalog
+    return None
 
 
 def format_barcode(code):
@@ -706,7 +711,7 @@ def format_barcode(code):
 
 
 if __name__ == '__main__':
-    logger.debug('Start program')
+    LOGGER.debug('Start program')
     execute_program()
-    logger.debug('Exit program')
+    LOGGER.debug('Exit program')
     sys.exit()
