@@ -51,7 +51,7 @@ def parse_arguments():
     parser.add_argument('-ex', '--expiration', help='expiration date YYMMDD')
     parser.add_argument('-f', '--function', help='function to execute',
                         type=str, choices=['check_gtin_id',
-                                           'format_barcode'
+                                           'format_barcode',
                                            'verify',
                                            'get_ean_number',
                                            'get_lot_number',
