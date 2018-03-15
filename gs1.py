@@ -4,7 +4,6 @@ This module deals with GS1 barcode.
 """
 
 
-import logging
 import sys
 import argparse
 from re import match, search
@@ -13,58 +12,6 @@ __author__ = "Laszlo Tamas"
 __copyright__ = "Copyright (c) 2048 Laszlo Tamas"
 __licence__ = "MIT"
 __version__ = "1.0"
-
-LOGGER = logging.getLogger('program')
-# set level for file handling (NOTSET>DEBUG>INFO>WARNING>ERROR>CRITICAL)
-LOGGER.setLevel(logging.DEBUG)
-
-# create file handler which logs even debug messages
-LOGGER_FH = logging.FileHandler('gs1.log')
-
-# create console handler with a higher log level
-LOGGER_CH = logging.StreamHandler()
-LOGGER_CH.setLevel(logging.INFO)
-
-# create formatter and add it to the handlers
-FORMATTER = \
-    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-LOGGER_FH.setFormatter(FORMATTER)
-LOGGER_CH.setFormatter(FORMATTER)
-
-# add the handlers to the logger
-LOGGER.addHandler(LOGGER_FH)
-LOGGER.addHandler(LOGGER_CH)
-
-
-def parse_arguments():
-    """
-    Parse program arguments.
-
-    @return arguments
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--barcode', help='full barcode')
-    parser.add_argument('-cn', '--catalognumber', help='catalog number')
-    parser.add_argument('-ea', '--eannumber', help='EAN number')
-    parser.add_argument('-ln', '--lotnumber', help='LOT number')
-    parser.add_argument('-li', '--lic', help='LIC identifier')
-    parser.add_argument('-ex', '--expiration', help='expiration date YYMMDD')
-    parser.add_argument('-f', '--function', help='function to execute',
-                        type=str, choices=['check_gtin_id',
-                                           'format_barcode',
-                                           'verify',
-                                           'get_ean_number',
-                                           'get_lot_number',
-                                           'get_expiration_date',
-                                           'get_catalog_number',
-                                           'parse_gs1',
-                                           'create_gs1',
-                                           'create_gs1_with_brackets',
-                                           'create_gs1_zpl',
-                                           'create_gs1_character'])
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='increase output verbosity')
-    return parser.parse_args()
 
 
 GTIN_ID = "01"
@@ -397,6 +344,301 @@ GS1_CHART_DIC_REV = {
 }
 
 
+class GS1Check(object):
+    """Class to deal with GS1 code
+    """
+
+    def __init__(self):
+        self.barcode = ""
+
+    def set_barcode(self, barcode):
+        """Set and preformat barcode.
+
+        Arguments:
+            barcode {str} -- barcode
+        """
+
+        self.barcode = barcode
+        self.format_barcode()
+
+    def check_gtin_id(self):
+        """Check GTIN ID.
+
+        Arguments:
+            code {str} -- barcode
+
+        Returns:
+            bool -- Wether the GTIN ID is (01)
+        """
+
+        ret = False
+        if self.barcode[:2] == GTIN_ID:
+            ret = True
+        return ret
+
+    def verify(self):
+        """Verify barcode.
+
+        Arguments:
+            code {str} -- barcode
+
+        Returns:
+            bool -- barcode is verified
+        """
+
+        ret = False
+        if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', self.barcode):
+            ret = True
+        return ret
+
+    def format_barcode(self):
+        """Format barcode.
+        """
+
+        self.barcode = self.barcode.replace("(", "")
+        self.barcode = self.barcode.replace(")", "")
+
+
+class GS1GetElement(object):
+    """Class to deal with GS1 code
+    """
+
+    def __init__(self):
+        self.barcode = ""
+        self.ean_number = ""
+        self.lot_number = ""
+        self.expiration_date = ""
+        self.catalog_number = ""
+
+    def set_barcode(self, barcode):
+        """Set and preformat barcode.
+
+        Arguments:
+            barcode {str} -- barcode
+        """
+
+        self.barcode = barcode
+        self.format_barcode()
+
+    def format_barcode(self):
+        """Format barcode.
+        """
+
+        self.barcode = self.barcode.replace("(", "")
+        self.barcode = self.barcode.replace(")", "")
+
+    def get_ean_number(self):
+        """Get EAN number.
+
+        Returns:
+            {str} -- EAN number (01)
+        """
+
+        ret = None
+        if match(r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$', self.barcode):
+            ret = search(r'^01(\d{14})', self.barcode).group(1)
+        self.ean_number = ret
+        return ret
+
+    def get_lot_number(self):
+        """Get LOT number.
+
+        Returns:
+            str -- LOT number (10)
+        """
+
+        ret = ""
+        if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', self.barcode):
+            ret = search(r'^01(\d{14})10(\d*)17', self.barcode).group(2)
+        self.lot_number = ret
+        return ret
+
+    def get_expiration_date(self):
+        """Get expiration date.
+
+        Returns:
+            str -- expiration date YYDDMM (17)
+        """
+
+        ret = ""
+        if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', self.barcode):
+            ret = search(r'^01(\d{14})10(\d*)17(\d{6})21',
+                         self.barcode).group(3)
+        self.expiration_date = ret
+        return ret
+
+    def get_catalog_number(self):
+        """Get catalog number
+
+        Returns:
+            str -- catalog number (21)
+        """
+
+        ret = ""
+        if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', self.barcode):
+            ret = search(
+                r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$',
+                self.barcode).group(4)
+        self.catalog_number = ret
+        return ret
+
+    def parse_gs1(self):
+        """Parse GS1 code.
+
+        Returns:
+            str[] -- barcode elements, (01) EAN, (10) LOT,
+            (17) expiration date, (21) catalog number
+        """
+
+        if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', self.barcode):
+            m_ean = search(r'^01(\d{14})', self.barcode).group(1)
+            m_lot = search(r'^01(\d{14})10(\d*)17', self.barcode).group(2)
+            m_expiration = search(
+                r'^01(\d{14})10(\d*)17(\d{6})21', self.barcode).group(3)
+            m_catalog = search(
+                r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$',
+                self.barcode).group(4)
+            return m_ean, m_lot, m_expiration, m_catalog
+        self.ean_number = m_ean
+        self.lot_number = m_lot
+        self.expiration_date = m_expiration
+        self.catalog_number = m_catalog
+        return None
+
+
+class GS1Create(object):
+    """Class to deal with GS1 code
+    """
+
+    def __init__(self):
+        self.barcode = ""
+        self.ean_number = ""
+        self.lot_number = ""
+        self.expiration_date = ""
+        self.catalog_number = ""
+        self.output_style = "Normal"
+        self.code_without_end = ""
+
+    def set_barcode(self, barcode):
+        """Set and preformat barcode.
+
+        Arguments:
+            barcode {str} -- barcode
+        """
+
+        self.barcode = barcode
+        self.format_barcode()
+
+    def format_barcode(self):
+        """Format barcode.
+        """
+
+        self.barcode = self.barcode.replace("(", "")
+        self.barcode = self.barcode.replace(")", "")
+
+    def create_gs1(self):
+        """Create GS1 code.
+
+        Returns:
+            str -- GS1 barcode
+        """
+
+        ret = ""
+        bracket_before = ""
+        bracket_after = ""
+        if self.output_style == "Normal" or self.output_style == "Brackets":
+            if self.output_style == "Brackets":
+                bracket_before = "("
+                bracket_after = ")"
+            ret = bracket_before + GTIN_ID+bracket_after + self.ean_number + \
+                bracket_before + LOT_ID + bracket_after + self.lot_number + \
+                bracket_before + EXPIRATION_DATE_ID + bracket_after + \
+                self.expiration_date + \
+                bracket_before + CATALOG_NUMBER_ID + bracket_after + \
+                self.catalog_number
+        if self.output_style == "ZPL":
+            # >;>80105996527176340102014>6AA>5>8171907312128012280>64
+            ret = "^BCN,,N,N^FD>;>8" + GTIN_ID + self.ean_number + LOT_ID
+            if len(self.lot_number) > 4:
+                ret = ret + self.lot_number[:4] + \
+                    ">6" + self.lot_number[4:] + ">5"
+            else:
+                ret = ret + self.lot_number
+            ret = ret+">8"+EXPIRATION_DATE_ID + self.expiration_date
+            ret = ret+CATALOG_NUMBER_ID + \
+                self.catalog_number[:8]+">6" + self.catalog_number[8:] + "^FS"
+        if self.output_style == "Character":
+            # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4pÎ
+            ret = "ÍÊ!" + GS1_CHART_DICT_C[self.ean_number[0:2]] + \
+                GS1_CHART_DICT_C[self.ean_number[2:4]] + \
+                GS1_CHART_DICT_C[self.ean_number[4:6]] + \
+                GS1_CHART_DICT_C[self.ean_number[6:8]] + \
+                GS1_CHART_DICT_C[self.ean_number[8:10]] + \
+                GS1_CHART_DICT_C[self.ean_number[10:12]] + \
+                GS1_CHART_DICT_C[self.ean_number[12:]]
+            ret = ret + "*" + GS1_CHART_DICT_C[self.lot_number[0:2]] + \
+                GS1_CHART_DICT_C[self.lot_number[2:4]]
+            if len(self.lot_number) > 4:
+                ret = ret + "È" + self.lot_number[4:] + "Ç"
+            ret = ret + "Ê1" + GS1_CHART_DICT_C[self.expiration_date[0:2]] + \
+                GS1_CHART_DICT_C[self.expiration_date[2:4]] + \
+                GS1_CHART_DICT_C[self.expiration_date[4:6]]
+            ret = ret + "5" + GS1_CHART_DICT_C[self.catalog_number[0:2]] + \
+                GS1_CHART_DICT_C[self.catalog_number[2:4]] + \
+                GS1_CHART_DICT_C[self.catalog_number[4:6]] + \
+                GS1_CHART_DICT_C[self.catalog_number[6:8]]
+            ret = ret + "È" + self.catalog_number[8:]
+            self.code_without_end = ret
+            ret = ret + self.get_check_digit() + "Î"
+        return ret
+
+    def get_check_digit(self):
+        """Generate CheckDigit.
+
+        Returns:
+            str -- CheckDigit
+        """
+
+        ret = ""
+        ret_val = GS1_CHART_DIC_REV[self.code_without_end[0]]
+        for i in range(2, len(self.code_without_end)+1):
+            ret_val = ret_val + \
+                (i-1) * GS1_CHART_DIC_REV[self.code_without_end[i-1:i]]
+        ret = GS1_CHART_DICT[ret_val % 103]
+        return ret
+
+
+def parse_arguments():
+    """
+    Parse program arguments.
+
+    @return arguments
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--barcode', help='full barcode')
+    parser.add_argument('-cn', '--catalognumber', help='catalog number')
+    parser.add_argument('-ea', '--eannumber', help='EAN number')
+    parser.add_argument('-ln', '--lotnumber', help='LOT number')
+    parser.add_argument('-li', '--lic', help='LIC identifier')
+    parser.add_argument('-ex', '--expiration', help='expiration date YYMMDD')
+    parser.add_argument('-f', '--function', help='function to execute',
+                        type=str, choices=['check_gtin_id',
+                                           'format_barcode',
+                                           'verify',
+                                           'get_ean_number',
+                                           'get_lot_number',
+                                           'get_expiration_date',
+                                           'get_catalog_number',
+                                           'parse_gs1',
+                                           'create_gs1',
+                                           'create_gs1_with_brackets',
+                                           'create_gs1_zpl',
+                                           'create_gs1_character'])
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='increase output verbosity')
+    return parser.parse_args()
+
+
 def execute_program():
     """Execute the program by arguments.
     """
@@ -412,7 +654,8 @@ def execute_program():
                 execute_creation()
 
     if args.function == 'parse_gs1':
-        res = parse_gs1(args.barcode)
+        GS1_ELEMENT.barcode = args.barcode
+        res = GS1_ELEMENT.parse_gs1()
         if args.verbose:
             print("EAN number: " + res[0])
             print("LOT number: " + res[1])
@@ -422,7 +665,9 @@ def execute_program():
             print(res)
 
     if args.function == 'format_barcode':
-        res = str(format_barcode(args.barcode))
+        GS1_ELEMENT.barcode = args.barcode
+        GS1_ELEMENT.format_barcode()
+        res = str(GS1_ELEMENT.barcode)
         if args.verbose:
             print("GS1 formatted barcode: " + res)
         else:
@@ -434,14 +679,15 @@ def execute_check():
     """
 
     args = parse_arguments()
+    GS1_CHECK.set_barcode(args.barcode)
     if args.function == 'check_gtin_id':
-        res = str(check_gtin_id(args.barcode))
+        res = str(GS1_CHECK.check_gtin_id())
         if args.verbose:
             print("GTIN ID: " + res)
         else:
             print(res)
     if args.function == 'verify':
-        res = str(verify(args.barcode))
+        res = str(GS1_CHECK.verify())
         if args.verbose:
             print("GS1 verification: " + res)
         else:
@@ -453,26 +699,27 @@ def execute_get_element():
     """
 
     args = parse_arguments()
+    GS1_ELEMENT.barcode = args.barcode
     if args.function == 'get_ean_number':
-        res = str(get_ean_number(args.barcode))
+        res = str(GS1_ELEMENT.get_ean_number())
         if args.verbose:
             print("EAN number: " + res)
         else:
             print(res)
     if args.function == 'get_lot_number':
-        res = str(get_lot_number(args.barcode))
+        res = str(GS1_ELEMENT.get_lot_number())
         if args.verbose:
             print("LOT number: " + res)
         else:
             print(res)
     if args.function == 'get_expiration_date':
-        res = str(get_expiration_date(args.barcode))
+        res = str(GS1_ELEMENT.get_expiration_date())
         if args.verbose:
             print("Expiration date: " + res)
         else:
             print(res)
     if args.function == 'get_catalog_number':
-        res = str(get_catalog_number(args.barcode))
+        res = str(GS1_ELEMENT.get_catalog_number())
         if args.verbose:
             print("Catalog number: " + res)
         else:
@@ -484,262 +731,44 @@ def execute_creation():
     """
 
     args = parse_arguments()
+    GS1_CREATE.ean_number = args.eannumber
+    GS1_CREATE.lot_number = args.lotnumber
+    GS1_CREATE.expiration_date = args.expiration
+    GS1_CREATE.catalog_number = args.catalognumber
     if args.function == 'create_gs1':
-        res = str(create_gs1(args.eannumber, args.lotnumber,
-                             args.expiration, args.catalognumber, "Normal"))
+        GS1_CREATE.output_style = "Normal"
+        res = str(GS1_CREATE.create_gs1())
         if args.verbose:
             print("GS1 barcode: " + res)
         else:
             print(res)
     if args.function == 'create_gs1_with_brackets':
-        res = str(create_gs1(args.eannumber, args.lotnumber,
-                             args.expiration, args.catalognumber, "Brackets"))
+        GS1_CREATE.output_style = "Brackets"
+        res = str(GS1_CREATE.create_gs1())
         if args.verbose:
             print("GS1 barcode: " + res)
         else:
             print(res)
     if args.function == 'create_gs1_zpl':
-        res = str(create_gs1(args.eannumber, args.lotnumber,
-                             args.expiration, args.catalognumber, "ZPL"))
+        GS1_CREATE.output_style = "ZPL"
+        res = str(GS1_CREATE.create_gs1())
         if args.verbose:
             print("GS1 barcode: " + res)
         else:
             print(res)
 
     if args.function == 'create_gs1_character':
-        res = str(create_gs1(args.eannumber, args.lotnumber,
-                             args.expiration, args.catalognumber, "Character"))
+        GS1_CREATE.output_style = "Character"
+        res = str(GS1_CREATE.create_gs1())
         if args.verbose:
             print("GS1 barcode: " + res)
         else:
             print(res)
 
 
-def create_gs1(ean_number, lot_number, expiration_date, catalog_number,
-               output_style="Normal"):
-    """Create GS1 code.
-
-    Arguments:
-        ean_number {str} -- EAN number
-        lot_number {str} -- LOT number
-        expiration_date {str} -- expiration date YYMMDD
-        catalog_number {str} -- catalog number
-
-    Keyword Arguments:
-        output_style {str} -- output style Normal, Brackets,
-        ZPL, Charcter (default: {Normal})
-
-    Returns:
-        str -- GS1 barcode
-    """
-
-    ret = ""
-    bracket_before = ""
-    bracket_after = ""
-    if output_style == "Normal" or output_style == "Brackets":
-        if output_style == "Brackets":
-            bracket_before = "("
-            bracket_after = ")"
-        ret = bracket_before + GTIN_ID+bracket_after + ean_number + \
-            bracket_before + LOT_ID + bracket_after + lot_number + \
-            bracket_before + EXPIRATION_DATE_ID + bracket_after + \
-            expiration_date + \
-            bracket_before + CATALOG_NUMBER_ID + bracket_after + \
-            catalog_number
-    if output_style == "ZPL":
-        # >;>80105996527176340102014>6AA>5>8171907312128012280>64
-        ret = "^BCN,,N,N^FD>;>8" + GTIN_ID + ean_number + LOT_ID
-        if len(lot_number) > 4:
-            ret = ret+lot_number[:4] + ">6"+lot_number[4:] + ">5"
-        else:
-            ret = ret+lot_number
-        ret = ret+">8"+EXPIRATION_DATE_ID+expiration_date
-        ret = ret+CATALOG_NUMBER_ID + \
-            catalog_number[:8]+">6"+catalog_number[8:] + "^FS"
-    if output_style == "Character":
-        # ÍÊ!%Ça;1_H*4.Ê13'?5<!6pÈ4pÎ
-        ret = "ÍÊ!" + GS1_CHART_DICT_C[ean_number[0:2]] + \
-            GS1_CHART_DICT_C[ean_number[2:4]] + \
-            GS1_CHART_DICT_C[ean_number[4:6]] + \
-            GS1_CHART_DICT_C[ean_number[6:8]] + \
-            GS1_CHART_DICT_C[ean_number[8:10]] + \
-            GS1_CHART_DICT_C[ean_number[10:12]] + \
-            GS1_CHART_DICT_C[ean_number[12:]]
-        ret = ret + "*" + GS1_CHART_DICT_C[lot_number[0:2]] + \
-            GS1_CHART_DICT_C[lot_number[2:4]]
-        if len(lot_number) > 4:
-            ret = ret + "È" + lot_number[4:] + "Ç"
-        ret = ret + "Ê1" + GS1_CHART_DICT_C[expiration_date[0:2]] + \
-            GS1_CHART_DICT_C[expiration_date[2:4]] + \
-            GS1_CHART_DICT_C[expiration_date[4:6]]
-        ret = ret + "5" + GS1_CHART_DICT_C[catalog_number[0:2]] + \
-            GS1_CHART_DICT_C[catalog_number[2:4]] + \
-            GS1_CHART_DICT_C[catalog_number[4:6]] + \
-            GS1_CHART_DICT_C[catalog_number[6:8]]
-        ret = ret + "È" + catalog_number[8:]
-        ret = ret + get_check_digit(ret) + "Î"
-    return ret
-
-
-def get_check_digit(code):
-    """Generate CheckDigit.
-
-    Arguments:
-        code {str} -- code without CheckDigit and Stop charcter
-
-    Returns:
-        str -- CheckDigit
-    """
-
-    ret = ""
-    ret_val = GS1_CHART_DIC_REV[code[0]]
-    # print(ret_val)
-    for i in range(2, len(code)+1):
-        ret_val = ret_val + (i-1) * GS1_CHART_DIC_REV[code[i-1:i]]
-        # Debug
-    #     print(code[i-1:i] + ": " + str(i-1) + "> " +
-    #           str(GS1_CHART_DIC_REV[code[i-1:i]]) + "> " +
-    #           str(i * GS1_CHART_DIC_REV[code[i-1:i]]))
-    # print(ret_val)
-    # print(ret_val % 103)
-    ret = GS1_CHART_DICT[ret_val % 103]
-    return ret
-
-
-def check_gtin_id(code):
-    """Check GTIN ID.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        bool -- Wether the GTIN ID is (01)
-    """
-
-    ret = False
-    if code[:2] == GTIN_ID:
-        ret = True
-    return ret
-
-
-def verify(code):
-    """Verify barcode.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        bool -- barcode is verified
-    """
-
-    ret = False
-    if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', code):
-        ret = True
-    return ret
-
-
-def get_ean_number(code):
-    """Get EAN number.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        {str} -- EAN number (01)
-    """
-
-    ret = None
-    if match(r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$', code):
-        ret = search(r'^01(\d{14})', code).group(1)
-    return ret
-
-
-def get_lot_number(code):
-    """Get LOT number.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        str -- LOT number (10)
-    """
-
-    ret = ""
-    if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', code):
-        ret = search(r'^01(\d{14})10(\d*)17', code).group(2)
-    return ret
-
-
-def get_expiration_date(code):
-    """Get expiration date.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        str -- expiration date YYDDMM (17)
-    """
-
-    ret = ""
-    if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', code):
-        ret = search(r'^01(\d{14})10(\d*)17(\d{6})21', code).group(3)
-    return ret
-
-
-def get_catalog_number(code):
-    """Get catalog number
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        str -- catalog number (21)
-    """
-
-    ret = ""
-    if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', code):
-        ret = search(r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$', code).group(4)
-    return ret
-
-
-def parse_gs1(code):
-    """Parse GS1 code.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        str[] -- barcode elements, (01) EAN, (10) LOT,
-        (17) expiration date, (21) catalog number
-    """
-
-    if match(r'^(01)(\d{14})10(\d*)17(\d{6})21(\d{9})$', code):
-        m_ean = search(r'^01(\d{14})', code).group(1)
-        m_lot = search(r'^01(\d{14})10(\d*)17', code).group(2)
-        m_expiration = search(r'^01(\d{14})10(\d*)17(\d{6})21', code).group(3)
-        m_catalog = search(
-            r'^01(\d{14})10(\d*)17(\d{6})21(\d{9})$', code).group(4)
-        return m_ean, m_lot, m_expiration, m_catalog
-    return None
-
-
-def format_barcode(code):
-    """Format barcode.
-
-    Arguments:
-        code {str} -- barcode
-
-    Returns:
-        str -- formatted barcode
-    """
-
-    ret = code.replace("(", "")
-    ret = ret.replace(")", "")
-    return ret
-
-
 if __name__ == '__main__':
-    LOGGER.debug('Start program')
+    GS1_ELEMENT = GS1GetElement()
+    GS1_CHECK = GS1Check()
+    GS1_CREATE = GS1Create()
     execute_program()
-    LOGGER.debug('Exit program')
     sys.exit()
